@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Definitive SQL Injection Experience</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { --aurora-speed: 40s; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            overflow: hidden;
+        }
+        .font-fira { font-family: 'Fira Code', monospace; }
+
+        /* Aurora Background */
+        .aurora-background {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            opacity: 0; transition: opacity 1.5s ease-in-out;
+        }
+        body.loaded .aurora-background { opacity: 1; }
+        .aurora {
+            position: absolute; border-radius: 50%; filter: blur(120px);
+            mix-blend-mode: screen; opacity: 0.7;
+        }
+        .aurora-1 { width: 600px; height: 600px; background: rgba(139, 92, 246, 0.25); animation: move-aurora-1 var(--aurora-speed) infinite alternate; }
+        .aurora-2 { width: 500px; height: 500px; background: rgba(34, 211, 238, 0.25); animation: move-aurora-2 calc(var(--aurora-speed) * 1.2) infinite alternate; }
+        .aurora-3 { width: 400px; height: 400px; background: rgba(99, 102, 241, 0.2); animation: move-aurora-3 calc(var(--aurora-speed) * 0.8) infinite alternate; }
+
+        @keyframes move-aurora-1 { from { transform: translate(-50%, -50%) rotate(0deg) translateX(20%); } to { transform: translate(-50%, -50%) rotate(360deg) translateX(20%); } }
+        @keyframes move-aurora-2 { from { transform: translate(-50%, -50%) rotate(0deg) translateX(-30%) translateY(30%); } to { transform: translate(-50%, -50%) rotate(-360deg) translateX(-30%) translateY(30%); } }
+        @keyframes move-aurora-3 { from { transform: translate(0%, 0%) rotate(0deg) translateX(50%); } to { transform: translate(0%, 0%) rotate(360deg) translateX(50%); } }
+
+        /* Upgraded UI Styles */
+        .glass-panel {
+            background-color: rgba(20, 25, 38, 0.8);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transform: translateY(20px); opacity: 0;
+            animation: slide-in 0.7s 0.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+        @keyframes slide-in { to { transform: translateY(0); opacity: 1; } }
+        
+        .typing-cursor::after { content: '▋'; animation: blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+        
+        /* SQL Syntax Highlighting (Dark Mode Only) */
+        .sql-injection { background-color: rgba(251, 146, 60, 0.25); color: #fdba74; padding: 1px 4px; border-radius: 4px; border: 1px solid rgba(251, 146, 60, 0.4); }
+        .sql-keyword { color: #ff8b92; font-weight: 500; }
+        .sql-string { color: #c3e88d; }
+        .sql-comment { color: #8d93c4; }
+        .sql-operator { color: #82aaff; }
+        .sql-function { color: #e1aaff; }
+        .sql-number { color: #ffcb8b; }
+
+        /* Scanline Overlay */
+        .scanline-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 100;
+            background: linear-gradient(to bottom, rgba(20,20,40,0) 50%, rgba(20,20,40,0.1) 51%);
+            background-size: 100% 4px;
+            animation: scan 10s linear infinite;
+        }
+        @keyframes scan { from { background-position: 0 0; } to { background-position: 0 -400px; } }
+
+        /* Glitch Title Effect */
+        .glitch { position: relative; text-shadow: 0 0 10px rgba(139, 92, 246, 0.2); }
+        .glitch::before, .glitch::after {
+            content: attr(data-text); position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #0d1117; overflow: hidden;
+        }
+        .glitch::before { left: 2px; text-shadow: -2px 0 #ff00c1; animation: glitch-anim-1 2.5s infinite linear alternate-reverse; }
+        .glitch::after { left: -2px; text-shadow: -2px 0 #00fff9, 2px 2px #ff00c1; animation: glitch-anim-2 2.5s infinite linear alternate-reverse; }
+        @keyframes glitch-anim-1 { 0%, 100% { clip-path: inset(45% 0 56% 0); } 25% { clip-path: inset(50% 0 10% 0); } 50% { clip-path: inset(80% 0 5% 0); } 75% { clip-path: inset(20% 0 70% 0); } }
+        @keyframes glitch-anim-2 { 0%, 100% { clip-path: inset(15% 0 86% 0); } 25% { clip-path: inset(70% 0 20% 0); } 50% { clip-path: inset(40% 0 45% 0); } 75% { clip-path: inset(90% 0 5% 0); } }
+
+        /* Shimmer Button Effect */
+        #login-button { position: relative; overflow: hidden; }
+        #login-button::before {
+            content: ''; position: absolute;
+            top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.6s ease;
+        }
+        #login-button:hover::before { left: 100%; }
+
+        /* Scrollbar styles */
+        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: rgba(100, 100, 100, 0.5); border-radius: 4px; }
+
+        /* --- NEW: Tooltip Styles --- */
+        [data-tooltip] {
+            position: relative;
+        }
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(8px); /* Start slightly lower */
+            background-color: #111827;
+            color: #d1d5db;
+            font-size: 0.75rem; /* 12px */
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 6px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+            z-index: 1000;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+        [data-tooltip]:hover::after {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-8px); /* Move up to final position */
+        }
+        
+        /* --- NEW: Enhanced Input Focus Glow --- */
+        .enhanced-focus:focus {
+            --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+            box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), 0 0 15px -3px var(--tw-ring-color), var(--tw-shadow, 0 0 #0000) !important;
+        }
+
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="scanline-overlay"></div>
+    <div class="aurora-background">
+        <div class="aurora aurora-1"></div><div class="aurora aurora-2"></div><div class="aurora aurora-3"></div>
+    </div>
+
+    <main class="w-full max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="xl:col-span-2 glass-panel rounded-2xl shadow-2xl shadow-black/30 overflow-hidden">
+            <div class="p-6 border-b border-white/10">
+                <h1 class="glitch text-3xl font-bold text-gray-100" data-text="The Definitive SQLi Experience">The Definitive SQLi Experience</h1>
+                <p class="text-gray-400 mt-1">An interactive cybersecurity deep dive.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2">
+                <div class="p-6 border-t lg:border-t-0 lg:border-r border-white/10">
+                    <div class="flex justify-between items-center mb-6">
+                         <h2 class="text-xl font-semibold text-gray-200 flex items-center gap-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            <span>Attack Simulation</span>
+                         </h2>
+                        <div class="flex items-center space-x-2">
+                            <span id="vulnerable-label" class="font-semibold text-red-500 text-sm">Vulnerable</span>
+                            <span data-tooltip="Toggle between vulnerable and secure modes">
+                                <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in bg-gray-600 rounded-full" id="mode-toggle-container"></div>
+                            </span>
+                            <span id="patched-label" class="font-medium text-gray-500 text-sm">Patched</span>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <input type="text" id="username" class="w-full px-4 py-2 bg-gray-700/50 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 text-gray-200 placeholder-gray-400 enhanced-focus" placeholder="Username">
+                        <input type="password" id="password" class="w-full px-4 py-2 bg-gray-700/50 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 text-gray-200 placeholder-gray-400 enhanced-focus" placeholder="Password">
+                        <button id="login-button" class="w-full py-2.5 px-4 font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-md shadow-lg shadow-cyan-800/50 transition-all duration-200 transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 focus:ring-offset-gray-900" data-tooltip="Run the query against the database">Execute</button>
+                    </div>
+                    <div id="attack-suggestion" class="mt-6 space-y-3 max-h-[260px] overflow-y-auto pr-2">
+                        </div>
+                </div>
+
+                <div class="p-6 bg-black/20">
+                    <h2 id="explanation-title" class="text-xl font-semibold text-red-500 flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>Vulnerable Mode Explained</span>
+                    </h2>
+                    <p id="explanation-text" class="text-sm text-gray-400 mt-2">The server insecurely concatenates user input directly into the SQL query, allowing attackers to inject malicious commands.</p>
+                    <div class="mt-4">
+                        <h3 class="text-sm font-medium text-gray-300">Generated SQL Query:</h3>
+                        <div class="mt-2 p-4 bg-black/50 text-gray-300 rounded-md text-sm font-fira overflow-x-auto min-h-[100px]">
+                            <pre><code id="sql-query-display"></code></pre>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h3 class="text-sm font-medium text-gray-300">Result:</h3>
+                        <div id="result-box" class="mt-2 p-4 border border-gray-600 rounded-lg text-center transition-all duration-300 min-h-[80px] flex items-center justify-center">
+                            <p id="result-text" class="font-semibold text-gray-400">Awaiting execution...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel rounded-2xl shadow-2xl shadow-black/30 overflow-hidden flex flex-col" style="animation-delay: 0.1s;">
+            <h2 class="p-6 text-xl font-semibold text-gray-200 border-b border-white/10 flex items-center gap-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4M4 7v10"></path></svg>
+                <span>Live Database View</span>
+            </h2>
+            <div id="db-viewer" class="p-6 space-y-6 overflow-y-auto flex-grow">
+                </div>
+        </div>
+    </main>
+
+<script>
+    // NO CHANGES WERE MADE TO THE SCRIPT BLOCK
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- App State ---
+        let isPatchedMode = false;
+        let isTyping = false;
+        const mockDatabase = {
+            users: [
+                { id: 1, username: 'admin', password: 'password123' },
+                { id: 2, username: 'sally', password: 'supersecret_sally' },
+                { id: 3, username: 'bob', password: 'passwordbob' }
+            ],
+            products: [
+                { id: 101, name: 'Quantum Laptop', price: 2499.99 },
+                { id: 102, name: 'Neural Earbuds', price: 399.00 },
+                { id: 103, name: 'Fusion Smartwatch', price: 799.50 }
+            ]
+        };
+        
+        // --- DOM Elements ---
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const loginButton = document.getElementById('login-button');
+        const sqlQueryDisplay = document.getElementById('sql-query-display');
+        const resultBox = document.getElementById('result-box');
+        const resultText = document.getElementById('result-text');
+        const modeToggleContainer = document.getElementById('mode-toggle-container');
+        const explanationTitle = document.getElementById('explanation-title');
+        const explanationText = document.getElementById('explanation-text');
+        const attackSuggestionContainer = document.getElementById('attack-suggestion');
+        const dbViewer = document.getElementById('db-viewer');
+
+        // --- Attack Vectors ---
+        const attacks = [
+            {
+                name: "Authentication Bypass",
+                type: 'password',
+                value: "' OR '1'='1' -- ",
+                description: "Logs you in as the first user (admin) by creating a universally true condition.",
+                theme: 'amber'
+            },
+            {
+                name: "Data Exfiltration (UNION)",
+                type: 'username',
+                value: "' UNION SELECT name, price FROM products -- ",
+                description: "Steals data from another table (`products`) by merging query results.",
+                theme: 'orange'
+            },
+            {
+                name: "Blind Injection (Time-Based)",
+                type: 'username',
+                value: "' AND (SELECT SLEEP(3)) -- ",
+                description: "Infers data by forcing the database to wait, causing a noticeable delay.",
+                theme: 'rose'
+            }
+        ];
+
+        // --- UI Initialization ---
+        function initializeUI() {
+            // Mode Toggle
+            modeToggleContainer.innerHTML = `<input type="checkbox" name="toggle" id="mode-toggle" class="absolute block w-5 h-5 rounded-full bg-gray-800 border-4 border-transparent appearance-none cursor-pointer transition-transform duration-300 ease-in-out transform" /><label for="mode-toggle" class="block overflow-hidden h-5 rounded-full cursor-pointer"></label>`;
+            document.getElementById('mode-toggle').addEventListener('change', (e) => setMode(e.target.checked));
+            
+            // Attack Suggestions
+            attackSuggestionContainer.innerHTML = attacks.map(attack => `
+                <div class="p-3 bg-${attack.theme}-900/20 border border-${attack.theme}-500/30 rounded-lg cursor-pointer transition-all duration-200 hover:border-${attack.theme}-500/60 hover:bg-${attack.theme}-900/40" data-type="${attack.type}" data-value="${attack.value}">
+                    <h4 class="font-semibold text-${attack.theme}-300 text-sm">${attack.name}</h4>
+                    <p class="text-xs text-${attack.theme}-400 mt-1">${attack.description}</p>
+                    <code class="block text-left mt-2 p-1.5 bg-${attack.theme}-900/40 text-${attack.theme}-200 text-xs rounded font-fira break-all">${attack.value}</code>
+                </div>
+            `).join('');
+
+            // Add click listeners for attack suggestions
+            document.querySelectorAll('#attack-suggestion > div').forEach(el => {
+                el.addEventListener('click', () => {
+                    if (isPatchedMode) return;
+                    const type = el.dataset.type;
+                    const value = el.dataset.value;
+                    usernameInput.value = (type === 'username') ? value : 'admin';
+                    passwordInput.value = (type === 'password') ? value : 'password';
+                    updateQueryDisplay(true);
+                });
+            });
+            
+            // Initial render
+            renderDatabase();
+            setMode(false);
+            setTimeout(() => document.body.classList.add('loaded'), 100);
+        }
+
+        // --- Core Logic ---
+        function setMode(patched) {
+            isPatchedMode = patched;
+            const modeToggleInput = document.getElementById('mode-toggle');
+            if(modeToggleInput) modeToggleInput.checked = patched;
+
+            const titleIcon = patched
+                ? `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
+                : `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`;
+
+            explanationTitle.innerHTML = `${titleIcon}<span>${patched ? 'Patched Mode Explained' : 'Vulnerable Mode Explained'}</span>`;
+            explanationTitle.className = `text-xl font-semibold flex items-center gap-2 ${patched ? 'text-emerald-500' : 'text-red-500'}`;
+            explanationText.textContent = patched
+                ? 'Parameterized queries are used. User input is treated as data, not executable code, neutralizing injection attacks.'
+                : 'The server insecurely concatenates user input directly into the SQL query, allowing attackers to inject malicious commands.';
+            
+            document.getElementById('vulnerable-label').className = `text-sm transition-colors ${!patched ? 'font-semibold text-red-500' : 'font-medium text-gray-500'}`;
+            document.getElementById('patched-label').className = `text-sm transition-colors ${patched ? 'font-semibold text-emerald-500' : 'font-medium text-gray-500'}`;
+            attackSuggestionContainer.style.opacity = patched ? '0.5' : '1';
+            attackSuggestionContainer.style.pointerEvents = patched ? 'none' : 'auto';
+
+            updateQueryDisplay();
+            resetResult();
+        }
+
+        async function attemptLogin() {
+            loginButton.disabled = true;
+            loginButton.innerHTML = `<div class="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>`;
+
+            let result = { success: false, message: 'Login Failed. Invalid credentials.' };
+            const user = usernameInput.value;
+            const pass = passwordInput.value;
+
+            // Blind SQLi check
+            if (!isPatchedMode && user.toUpperCase().includes('SLEEP(')) {
+                const delay = parseInt(user.match(/SLEEP\((\d+)\)/i)?.[1] || 0) * 1000;
+                result = { success: true, message: `Execution delayed by ${delay/1000}s. The server is vulnerable to Time-Based Blind SQLi!` };
+                await new Promise(resolve => setTimeout(resolve, delay));
+            } else if (isPatchedMode) {
+                const foundUser = mockDatabase.users.find(dbUser => dbUser.username === user && dbUser.password === pass);
+                if (foundUser) result = { success: true, message: `Success! Logged in as ${foundUser.username}.` };
+            } else { // Vulnerable Mode
+                if (pass.toUpperCase().includes("' OR '1'='1'")) {
+                    result = { success: true, message: `Success! Logged in as ${mockDatabase.users[0].username} via Auth Bypass.` };
+                } else if (user.toUpperCase().includes('UNION SELECT')) {
+                    const exfiltratedData = mockDatabase.products.map(p => `> ${p.name} : $${p.price.toFixed(2)}`).join('<br>');
+                    result = { success: true, message: `Data Exfiltrated from 'products':<br><div class="text-left text-xs p-2 mt-2 font-fira bg-gray-700 rounded">${exfiltratedData}</div>`, exfiltrated: true };
+                    animateDbExfiltration();
+                } else {
+                    const foundUser = mockDatabase.users.find(dbUser => dbUser.username === user && dbUser.password === pass);
+                    if (foundUser) result = { success: true, message: `Success! Logged in as ${foundUser.username}.` };
+                }
+            }
+            
+            updateResult(result);
+            loginButton.disabled = false;
+            loginButton.textContent = 'Execute';
+        }
+
+        // --- Rendering & Animations ---
+        function renderDatabase() {
+            dbViewer.innerHTML = Object.entries(mockDatabase).map(([tableName, rows]) => `
+                <div>
+                    <h3 class="font-semibold text-gray-300 font-fira mb-2 text-sm">&gt; ${tableName}</h3>
+                    <div class="overflow-x-auto rounded-lg border border-gray-700/50">
+                        <table class="min-w-full text-sm text-left" id="table-${tableName}">
+                            <thead class="bg-black/20">
+                                <tr>${Object.keys(rows[0]).map(col => `<th class="px-4 py-2 font-medium text-gray-400">${col}</th>`).join('')}</tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700/50">
+                                ${rows.map(row => `<tr class="transition-colors hover:bg-white/5">${Object.values(row).map(val => `<td class="px-4 py-2 text-gray-200">${val}</td>`).join('')}</tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function animateDbExfiltration() {
+            const table = document.getElementById('table-products');
+            if (!table) return;
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach((row, i) => {
+                setTimeout(() => {
+                    row.classList.add('bg-orange-500/30');
+                    setTimeout(() => row.classList.remove('bg-orange-500/30'), 1500);
+                }, i * 150);
+            });
+        }
+        
+        async function typeAnimation(element, text) {
+            isTyping = true;
+            element.innerHTML = '';
+            element.classList.add('typing-cursor');
+            for (let i = 0; i < text.length; i++) {
+                await new Promise(res => setTimeout(res, 15));
+                element.innerHTML = highlightSql(text.substring(0, i + 1));
+            }
+            element.classList.remove('typing-cursor');
+            isTyping = false;
+        }
+
+        function highlightSql(query) {
+            const keywords = ['SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'UNION', 'SLEEP'];
+            let html = query.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            
+            const injectionMatch = query.match(/' (OR|UNION|AND) .*--/);
+            if (injectionMatch) {
+                const safeInjection = injectionMatch[0].replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                 html = html.replace(safeInjection, `<span class="sql-injection">${safeInjection}</span>`);
+            }
+            
+            // Numbers
+            html = html.replace(/\b(\d+)\b/g, '<span class="sql-number">$1</span>');
+            // Keywords
+            keywords.forEach(kw => { html = html.replace(new RegExp(`\\b(${kw})\\b`, 'gi'), '<span class="sql-keyword">$1</span>'); });
+            // Strings
+            html = html.replace(/'(.*?)'/g, (m, g1) => g1.includes('<span') ? m : `'<span class="sql-string">${g1}</span>'`);
+            // Comments
+            html = html.replace(/(--.*)/g, '<span class="sql-comment">$1</span>');
+            // Functions
+            html = html.replace(/([a-zA-Z_]+)\(/g, '<span class="sql-function">$1</span>(');
+            // Operators
+            html = html.replace(/(=|\*|\(|\))/g, '<span class="sql-operator">$1</span>');
+
+            return html;
+        }
+
+        function updateQueryDisplay(animate = false) {
+            if (isTyping) return;
+            const user = usernameInput.value;
+            const pass = passwordInput.value;
+            let queryText;
+            if (isPatchedMode) {
+                queryText = `SELECT * FROM users WHERE username = ? AND password = ?;\n\n-- Parameters: ["${user}", "${pass}"]`;
+            } else {
+                queryText = `SELECT * FROM users WHERE username = '${user}' AND password = '${pass}';`;
+            }
+            if (animate) {
+                typeAnimation(sqlQueryDisplay, queryText);
+            } else {
+                sqlQueryDisplay.innerHTML = highlightSql(queryText);
+            }
+        }
+        
+        function updateResult(result) {
+            resultBox.className = 'mt-2 p-4 border rounded-lg text-center transition-all duration-300 min-h-[80px] flex items-center justify-center'; // Reset
+            if (result.success) {
+                resultText.innerHTML = result.message;
+                resultBox.classList.add('bg-emerald-900/20', 'border-emerald-500/30', 'text-emerald-300');
+            } else {
+                resultText.innerHTML = result.message;
+                resultBox.classList.add('bg-red-900/20', 'border-red-500/30', 'text-red-300');
+            }
+        }
+
+        function resetResult() {
+            resultBox.className = 'mt-2 p-4 border border-gray-600 rounded-lg text-center transition-all duration-300 min-h-[80px] flex items-center justify-center';
+            resultText.innerHTML = '<p class="font-semibold text-gray-400">Awaiting execution...</p>';
+        }
+
+        // --- Event Listeners ---
+        usernameInput.addEventListener('input', () => updateQueryDisplay());
+        passwordInput.addEventListener('input', () => updateQueryDisplay());
+        loginButton.addEventListener('click', attemptLogin);
+
+        // --- Initial Call ---
+        initializeUI();
+    });
+</script>
+</body>
+</html>

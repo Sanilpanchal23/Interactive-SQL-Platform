@@ -156,8 +156,3 @@ MIT License © 2025 **\[Sanil Panchal]**
 
 ✨ **The Definitive SQL Injection Experience – Learn SQLi Safely and Understand the Power of Parameterized Queries.**
 
----
-
-If you want, I can also **design a fully branded portfolio banner** for this project and prepare the README with **all screenshots and consistent style**, so it matches **Cloud Architect Pro, CTI Dashboard, and Azure Intelligent Overview**.
-
-Do you want me to do that next?

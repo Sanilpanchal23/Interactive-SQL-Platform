@@ -99,7 +99,7 @@ All logic is contained in `index.html`. TailwindCSS and Google Fonts are loaded 
 ### 1. Clone this repo
 
 ```bash
-git clone https://github.com/yourusername/sql-injection-experience.git
+git clone https://github.com/Sanilpanchal23/Interactive-SQL-Platform.git
 cd sql-injection-experience
 ```
 

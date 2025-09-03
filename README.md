@@ -1,7 +1,3 @@
-Absolutely! Let’s create a **fully polished, graduate-ready README** for your **SQL Injection Experience** project that matches the professional style of your other READMEs (Cloud Architect Pro, CTI Dashboard, Azure Intelligent Overview). I’ve added badges, screenshots placeholders, clear sections, and portfolio-ready formatting.
-
----
-
 # 🛡️ The Definitive SQL Injection Experience
 
 ![HTML5](https://img.shields.io/badge/HTML5-FF5733.svg)
@@ -32,7 +28,7 @@ It provides a **safe, isolated environment** to experiment with SQLi concepts wi
 
 ## 🌐 Live Demo
 
-🔗 **[View the Simulation](https://yourusername.github.io/sql-injection-experience/)**
+🔗 **[View the Simulation](https://sanilpanchal23.github.io/Interactive-SQL-Platform/)**
 
 *(Hosted via GitHub Pages)*
 
@@ -44,13 +40,6 @@ It provides a **safe, isolated environment** to experiment with SQLi concepts wi
 | ------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------- |
 | ![Overview](assets/screenshot-overview.png) | ![Vulnerable Mode](assets/screenshot-vulnerable.png) | ![Patched Mode](assets/screenshot-patched.png) |
 
-**Suggested filenames for your `assets` folder:**
-
-* `screenshot-overview.png`
-* `screenshot-vulnerable.png`
-* `screenshot-patched.png`
-
----
 
 ## ✨ Features
 
@@ -161,7 +150,7 @@ Do **not** use these techniques on systems you do not own or have explicit permi
 
 ## 📜 Licence
 
-MIT License © 2025 **\[Your Name]**
+MIT License © 2025 **\[Sanil Panchal]**
 
 ---
 
